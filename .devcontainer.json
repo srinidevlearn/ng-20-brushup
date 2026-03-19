@@ -1,0 +1,44 @@
+{
+  "name": "Angular Development",
+  "dockerFile": "Dockerfile",
+  "context": ".",
+  
+  // Mount volumes: local code → container workspace
+  "mounts": [
+    // Source code syncs from local to container
+    "source=${localEnv:HOME}/your-angular-project,target=/workspace,type=bind,consistency=cached",
+    // node_modules stays inside container (named volume)
+    "source=node_modules,target=/workspace/node_modules,type=volume"
+  ],
+
+  // Forward ports: container dev server accessible on local
+  "forwardPorts": [4200, 3000],
+  "portAttributes": {
+    "4200": {
+      "label": "Angular Dev Server",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Other Service",
+      "onAutoForward": "notify"
+    }
+  },
+
+  // VSCode extensions to install in container
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Angular.ng-template",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+
+  // Post-create commands: run after container starts
+  "postCreateCommand": "npm install",
+
+  // Run in the background
+  "remoteUser": "root"
+}

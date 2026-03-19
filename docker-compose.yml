@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  angular-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Cache build layers for faster rebuilds
+      cache_from:
+        - angular-app:latest
+    
+    container_name: angular-dev
+    
+    # Keep container running for interactive development
+    stdin_open: true
+    tty: true
+    
+    # Volume mounts
+    volumes:
+      # Bind mount: local source code syncs to container with optimization
+      # consistency=cached: macOS/Windows performance boost
+      - .:/workspace:cached
+      
+      # Named volume: node_modules stays inside container (not on local machine)
+      - node_modules:/workspace/node_modules
+      
+      # npm cache: speeds up future npm installs
+      - npm_cache:/root/.npm
+      
+      # Angular cache: speeds up builds
+      - angular_cache:/workspace/.angular
+    
+    # Forward ports to local machine
+    ports:
+      - "4200:4200"   # Angular dev server (ng serve)
+      - "3000:3000"   # Alternative port
+      - "8080:8080"   # Alternative port for other services
+    
+    # Environment variables
+    environment:
+      - NODE_ENV=development
+      - SKIP_PREFLIGHT_CHECK=true
+      - FORCE_COLOR=1  # Colored npm/ng output in terminal
+    
+    # Working directory inside container
+    working_dir: /workspace
+    
+    # Default command
+    command: /bin/bash
+    
+    # Automatically restart if it crashes
+    restart: unless-stopped
+
+# Named volumes that persist data across container restarts
+volumes:
+  node_modules:
+    driver: local
+  npm_cache:
+    driver: local
+  angular_cache:
+    driver: local
